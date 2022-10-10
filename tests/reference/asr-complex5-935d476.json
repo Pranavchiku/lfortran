@@ -1,0 +1,13 @@
+{
+    "basename": "asr-complex5-935d476",
+    "cmd": "lfortran --indent --show-asr --allow-implicit-interface --no-color {infile} -o {outfile}",
+    "infile": "tests/complex5.f90",
+    "infile_hash": "11bce26ba37575cd572165cfd5e713569bda1b7a8815b74c24373b42",
+    "outfile": null,
+    "outfile_hash": null,
+    "stdout": "asr-complex5-935d476.stdout",
+    "stdout_hash": "42280fb030c35f9f6274773a45661429858c90806b6a54d802b2277f",
+    "stderr": null,
+    "stderr_hash": null,
+    "returncode": 0
+}

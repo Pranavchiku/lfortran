@@ -1,0 +1,108 @@
+(TranslationUnit 
+    (SymbolTable
+        1
+        {
+            complex4:
+                (Program 
+                    (SymbolTable
+                        2
+                        {
+                            z1:
+                                (Variable 
+                                    2 
+                                    z1 
+                                    Local 
+                                    () 
+                                    () 
+                                    Default 
+                                    (Complex 8 []) 
+                                    Source 
+                                    Public 
+                                    Required 
+                                    .false.
+                                ), 
+                            z2:
+                                (Variable 
+                                    2 
+                                    z2 
+                                    Local 
+                                    () 
+                                    () 
+                                    Default 
+                                    (Complex 8 []) 
+                                    Source 
+                                    Public 
+                                    Required 
+                                    .false.
+                                )
+                            
+                        }) 
+                    complex4 
+                    [] 
+                    [(= 
+                        (Var 2 z1) 
+                        (Cast 
+                            (ComplexConstructor 
+                                (RealConstant 
+                                    1.080000 
+                                    (Real 4 [])
+                                ) 
+                                (RealConstant 
+                                    2.190000 
+                                    (Real 4 [])
+                                ) 
+                                (Complex 4 []) 
+                                (ComplexConstant 
+                                    1.080000 
+                                    2.190000 
+                                    (Complex 4 [])
+                                )
+                            ) 
+                            ComplexToComplex 
+                            (Complex 8 []) 
+                            ()
+                        ) 
+                        ()
+                    )
+                    (= 
+                        (Var 2 z2) 
+                        (Cast 
+                            (ComplexConstructor 
+                                (RealConstant 
+                                    3.980000 
+                                    (Real 4 [])
+                                ) 
+                                (RealConstant 
+                                    4.000000 
+                                    (Real 4 [])
+                                ) 
+                                (Complex 4 []) 
+                                (ComplexConstant 
+                                    3.980000 
+                                    4.000000 
+                                    (Complex 4 [])
+                                )
+                            ) 
+                            ComplexToComplex 
+                            (Complex 8 []) 
+                            ()
+                        ) 
+                        ()
+                    )
+                    (Print 
+                        () 
+                        [(ComplexBinOp 
+                            (Var 2 z1) 
+                            Add 
+                            (Var 2 z2) 
+                            (Complex 8 []) 
+                            ()
+                        )] 
+                        () 
+                        ()
+                    )]
+                )
+            
+        }) 
+    []
+)

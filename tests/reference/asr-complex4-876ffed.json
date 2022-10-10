@@ -1,0 +1,13 @@
+{
+    "basename": "asr-complex4-876ffed",
+    "cmd": "lfortran --indent --show-asr --no-color {infile} -o {outfile}",
+    "infile": "tests/complex4.f90",
+    "infile_hash": "2cc94b3c2d20ca54b2e7b0995588c8f912a0f123a4de1e5f44676e68",
+    "outfile": null,
+    "outfile_hash": null,
+    "stdout": "asr-complex4-876ffed.stdout",
+    "stdout_hash": "baa30436a15e1be753e5f76a93cbf1df978e6a19d67865fec9d01eec",
+    "stderr": null,
+    "stderr_hash": null,
+    "returncode": 0
+}

@@ -1,0 +1,322 @@
+(TranslationUnit 
+    (SymbolTable
+        1
+        {
+            eixz:
+                (Function 
+                    (SymbolTable
+                        2
+                        {
+                            cei:
+                                (Variable 
+                                    2 
+                                    cei 
+                                    Unspecified 
+                                    () 
+                                    () 
+                                    Default 
+                                    (Complex 8 []) 
+                                    Source 
+                                    Public 
+                                    Required 
+                                    .false.
+                                ), 
+                            dimag:
+                                (Function 
+                                    (SymbolTable
+                                        4
+                                        {
+                                            dimag_arg_0:
+                                                (Variable 
+                                                    4 
+                                                    dimag_arg_0 
+                                                    Unspecified 
+                                                    () 
+                                                    () 
+                                                    Default 
+                                                    (Complex 8 []) 
+                                                    Source 
+                                                    Public 
+                                                    Required 
+                                                    .false.
+                                                ), 
+                                            dimag_return_var_name:
+                                                (Variable 
+                                                    4 
+                                                    dimag_return_var_name 
+                                                    ReturnVar 
+                                                    () 
+                                                    () 
+                                                    Default 
+                                                    (Real 8 []) 
+                                                    Source 
+                                                    Public 
+                                                    Required 
+                                                    .false.
+                                                )
+                                            
+                                        }) 
+                                    dimag 
+                                    [(Var 4 dimag_arg_0)] 
+                                    [] 
+                                    [] 
+                                    (Var 4 dimag_return_var_name) 
+                                    Source 
+                                    Public 
+                                    Interface 
+                                    () 
+                                    .false. 
+                                    .false. 
+                                    .false. 
+                                    .false.
+                                ), 
+                            e1z:
+                                (Function 
+                                    (SymbolTable
+                                        3
+                                        {
+                                            e1z_arg_0:
+                                                (Variable 
+                                                    3 
+                                                    e1z_arg_0 
+                                                    Unspecified 
+                                                    () 
+                                                    () 
+                                                    Default 
+                                                    (Complex 8 []) 
+                                                    Source 
+                                                    Public 
+                                                    Required 
+                                                    .false.
+                                                ), 
+                                            e1z_arg_1:
+                                                (Variable 
+                                                    3 
+                                                    e1z_arg_1 
+                                                    Unspecified 
+                                                    () 
+                                                    () 
+                                                    Default 
+                                                    (Complex 8 []) 
+                                                    Source 
+                                                    Public 
+                                                    Required 
+                                                    .false.
+                                                )
+                                            
+                                        }) 
+                                    e1z 
+                                    [(Var 3 e1z_arg_0)
+                                    (Var 3 e1z_arg_1)] 
+                                    [] 
+                                    [] 
+                                    () 
+                                    Source 
+                                    Public 
+                                    Interface 
+                                    () 
+                                    .false. 
+                                    .false. 
+                                    .false. 
+                                    .false.
+                                ), 
+                            pi:
+                                (Variable 
+                                    2 
+                                    pi 
+                                    Local 
+                                    () 
+                                    () 
+                                    Default 
+                                    (Real 8 []) 
+                                    Source 
+                                    Public 
+                                    Required 
+                                    .false.
+                                ), 
+                            z:
+                                (Variable 
+                                    2 
+                                    z 
+                                    Unspecified 
+                                    () 
+                                    () 
+                                    Default 
+                                    (Complex 8 []) 
+                                    Source 
+                                    Public 
+                                    Required 
+                                    .false.
+                                )
+                            
+                        }) 
+                    eixz 
+                    [(Var 2 z)
+                    (Var 2 cei)] 
+                    [] 
+                    [(= 
+                        (Var 2 pi) 
+                        (RealConstant 
+                            3.141593 
+                            (Real 8 [])
+                        ) 
+                        ()
+                    )
+                    (SubroutineCall 
+                        2 e1z 
+                        () 
+                        [((ComplexUnaryMinus 
+                            (Var 2 z) 
+                            (Complex 8 []) 
+                            ()
+                        ))
+                        ((Var 2 cei))] 
+                        ()
+                    )
+                    (= 
+                        (Var 2 cei) 
+                        (ComplexUnaryMinus 
+                            (Var 2 cei) 
+                            (Complex 8 []) 
+                            ()
+                        ) 
+                        ()
+                    )
+                    (If 
+                        (RealCompare 
+                            (FunctionCall 
+                                2 dimag 
+                                () 
+                                [((Var 2 z))] 
+                                (Real 8 []) 
+                                () 
+                                ()
+                            ) 
+                            Gt 
+                            (Cast 
+                                (IntegerConstant 0 (Integer 4 [])) 
+                                IntegerToReal 
+                                (Real 8 []) 
+                                (RealConstant 
+                                    0.000000 
+                                    (Real 8 [])
+                                )
+                            ) 
+                            (Logical 4 []) 
+                            ()
+                        ) 
+                        [(= 
+                            (Var 2 cei) 
+                            (ComplexBinOp 
+                                (Var 2 cei) 
+                                Add 
+                                (ComplexBinOp 
+                                    (ComplexConstructor 
+                                        (RealConstant 
+                                            0.000000 
+                                            (Real 8 [])
+                                        ) 
+                                        (RealConstant 
+                                            1.000000 
+                                            (Real 8 [])
+                                        ) 
+                                        (Complex 8 []) 
+                                        (ComplexConstant 
+                                            0.000000 
+                                            1.000000 
+                                            (Complex 8 [])
+                                        )
+                                    ) 
+                                    Mul 
+                                    (Cast 
+                                        (Var 2 pi) 
+                                        RealToComplex 
+                                        (Complex 8 []) 
+                                        ()
+                                    ) 
+                                    (Complex 8 []) 
+                                    ()
+                                ) 
+                                (Complex 8 []) 
+                                ()
+                            ) 
+                            ()
+                        )] 
+                        [(If 
+                            (RealCompare 
+                                (FunctionCall 
+                                    2 dimag 
+                                    () 
+                                    [((Var 2 z))] 
+                                    (Real 8 []) 
+                                    () 
+                                    ()
+                                ) 
+                                Lt 
+                                (Cast 
+                                    (IntegerConstant 0 (Integer 4 [])) 
+                                    IntegerToReal 
+                                    (Real 8 []) 
+                                    (RealConstant 
+                                        0.000000 
+                                        (Real 8 [])
+                                    )
+                                ) 
+                                (Logical 4 []) 
+                                ()
+                            ) 
+                            [(= 
+                                (Var 2 cei) 
+                                (ComplexBinOp 
+                                    (Var 2 cei) 
+                                    Sub 
+                                    (ComplexBinOp 
+                                        (ComplexConstructor 
+                                            (RealConstant 
+                                                0.000000 
+                                                (Real 8 [])
+                                            ) 
+                                            (RealConstant 
+                                                1.000000 
+                                                (Real 8 [])
+                                            ) 
+                                            (Complex 8 []) 
+                                            (ComplexConstant 
+                                                0.000000 
+                                                1.000000 
+                                                (Complex 8 [])
+                                            )
+                                        ) 
+                                        Mul 
+                                        (Cast 
+                                            (Var 2 pi) 
+                                            RealToComplex 
+                                            (Complex 8 []) 
+                                            ()
+                                        ) 
+                                        (Complex 8 []) 
+                                        ()
+                                    ) 
+                                    (Complex 8 []) 
+                                    ()
+                                ) 
+                                ()
+                            )] 
+                            []
+                        )]
+                    )
+                    (Return)] 
+                    () 
+                    Source 
+                    Public 
+                    Implementation 
+                    () 
+                    .false. 
+                    .false. 
+                    .false. 
+                    .false.
+                )
+            
+        }) 
+    []
+)
