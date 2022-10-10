@@ -2489,3 +2489,11 @@ asr_implicit_typing = true
 filename = "../integration_tests/assign_to2.f90"
 ast = true
 asr_implicit_typing = true
+
+[[test]]
+filename = "complex4.f90"
+asr = true
+
+[[test]]
+filename = "complex5.f90"
+asr_implicit_interface = true
