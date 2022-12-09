@@ -1214,220 +1214,224 @@ public:
                 bool is_compile_time = false;
                 AST::var_sym_t &s = x.m_syms[i];
                 std::string sym = to_lower(s.m_name);
-                ASR::accessType s_access = dflt_access;
-                ASR::presenceType s_presence = dflt_presence;
-                bool value_attr = false;
-                AST::AttrType_t *sym_type =
-                    AST::down_cast<AST::AttrType_t>(x.m_vartype);
-                if (assgnd_access.count(sym)) {
-                    s_access = assgnd_access[sym];
-                }
-                if (assgnd_presence.count(sym)) {
-                    s_presence = assgnd_presence[sym];
-                }
-                ASR::storage_typeType storage_type =
-                        ASR::storage_typeType::Default;
-                bool is_pointer = false;
-                if (current_scope->get_symbol(sym) !=
-                        nullptr) {
-                    if (current_scope->parent != nullptr) {
-                        // re-declaring a global scope variable is allowed
-                        // Otherwise raise an error
-                        ASR::symbol_t *orig_decl = current_scope->get_symbol(sym);
-                        throw SemanticError(diag::Diagnostic(
-                            "Symbol is already declared in the same scope",
-                            diag::Level::Error, diag::Stage::Semantic, {
-                                diag::Label("redeclaration", {s.loc}),
-                                diag::Label("original declaration", {orig_decl->base.loc}, false),
-                            }));
-                    }
-                }
-                ASR::intentType s_intent;
-                if (std::find(current_procedure_args.begin(),
-                        current_procedure_args.end(), to_lower(s.m_name)) !=
-                        current_procedure_args.end()) {
-                    s_intent = LFortran::ASRUtils::intent_unspecified;
+                if ( compiler_options.implicit_typing && implicit_dictionary[sym]!=nullptr ) {
+                    // sym is implicitly declared
                 } else {
-                    s_intent = LFortran::ASRUtils::intent_local;
-                }
-                Vec<ASR::dimension_t> dims;
-                dims.reserve(al, 0);
-                // location for dimension(...) if present
-                Location dims_attr_loc;
-                if (x.n_attributes > 0) {
-                    for (size_t i=0; i < x.n_attributes; i++) {
-                        AST::decl_attribute_t *a = x.m_attributes[i];
-                        if (AST::is_a<AST::SimpleAttribute_t>(*a)) {
-                            AST::SimpleAttribute_t *sa =
-                                AST::down_cast<AST::SimpleAttribute_t>(a);
-                            if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrPrivate) {
-                                s_access = ASR::accessType::Private;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrPublic) {
-                                s_access = ASR::accessType::Public;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrSave) {
-                                storage_type = ASR::storage_typeType::Save;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrParameter) {
-                                storage_type = ASR::storage_typeType::Parameter;
-                            } else if( sa->m_attr == AST::simple_attributeType
-                                    ::AttrAllocatable ) {
-                                storage_type = ASR::storage_typeType::Allocatable;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrPointer) {
-                                is_pointer = true;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrOptional) {
-                                s_presence = ASR::presenceType::Optional;
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrTarget) {
-                                // Do nothing for now
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrAllocatable) {
-                                // TODO
-                            } else if (sa->m_attr == AST::simple_attributeType
-                                    ::AttrValue) {
-                                value_attr = true;
-                            } else if(sa->m_attr == AST::simple_attributeType
-                                    ::AttrIntrinsic) {
-                                excluded_from_symtab.push_back(sym);
+                    ASR::accessType s_access = dflt_access;
+                    ASR::presenceType s_presence = dflt_presence;
+                    bool value_attr = false;
+                    AST::AttrType_t *sym_type =
+                        AST::down_cast<AST::AttrType_t>(x.m_vartype);
+                    if (assgnd_access.count(sym)) {
+                        s_access = assgnd_access[sym];
+                    }
+                    if (assgnd_presence.count(sym)) {
+                        s_presence = assgnd_presence[sym];
+                    }
+                    ASR::storage_typeType storage_type =
+                            ASR::storage_typeType::Default;
+                    bool is_pointer = false;
+                    if (current_scope->get_symbol(sym) !=
+                            nullptr) {
+                        if (current_scope->parent != nullptr) { 
+                            // re-declaring a global scope variable is allowed
+                            // Otherwise raise an error
+                            ASR::symbol_t *orig_decl = current_scope->get_symbol(sym);
+                            throw SemanticError(diag::Diagnostic(
+                                "Symbol is already declared in the same scope",
+                                diag::Level::Error, diag::Stage::Semantic, {
+                                    diag::Label("redeclaration", {s.loc}),
+                                    diag::Label("original declaration", {orig_decl->base.loc}, false),
+                                }));
+                        }
+                    }
+                    ASR::intentType s_intent;
+                    if (std::find(current_procedure_args.begin(),
+                            current_procedure_args.end(), to_lower(s.m_name)) !=
+                            current_procedure_args.end()) {
+                        s_intent = LFortran::ASRUtils::intent_unspecified;
+                    } else {
+                        s_intent = LFortran::ASRUtils::intent_local;
+                    }
+                    Vec<ASR::dimension_t> dims;
+                    dims.reserve(al, 0);
+                    // location for dimension(...) if present
+                    Location dims_attr_loc;
+                    if (x.n_attributes > 0) {
+                        for (size_t i=0; i < x.n_attributes; i++) {
+                            AST::decl_attribute_t *a = x.m_attributes[i];
+                            if (AST::is_a<AST::SimpleAttribute_t>(*a)) {
+                                AST::SimpleAttribute_t *sa =
+                                    AST::down_cast<AST::SimpleAttribute_t>(a);
+                                if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrPrivate) {
+                                    s_access = ASR::accessType::Private;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrPublic) {
+                                    s_access = ASR::accessType::Public;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrSave) {
+                                    storage_type = ASR::storage_typeType::Save;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrParameter) {
+                                    storage_type = ASR::storage_typeType::Parameter;
+                                } else if( sa->m_attr == AST::simple_attributeType
+                                        ::AttrAllocatable ) {
+                                    storage_type = ASR::storage_typeType::Allocatable;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrPointer) {
+                                    is_pointer = true;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrOptional) {
+                                    s_presence = ASR::presenceType::Optional;
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrTarget) {
+                                    // Do nothing for now
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrAllocatable) {
+                                    // TODO
+                                } else if (sa->m_attr == AST::simple_attributeType
+                                        ::AttrValue) {
+                                    value_attr = true;
+                                } else if(sa->m_attr == AST::simple_attributeType
+                                        ::AttrIntrinsic) {
+                                    excluded_from_symtab.push_back(sym);
+                                } else {
+                                    throw SemanticError("Attribute type not implemented yet",
+                                            x.base.base.loc);
+                                }
+                            } else if (AST::is_a<AST::AttrIntent_t>(*a)) {
+                                AST::AttrIntent_t *ai =
+                                    AST::down_cast<AST::AttrIntent_t>(a);
+                                switch (ai->m_intent) {
+                                    case (AST::attr_intentType::In) : {
+                                        s_intent = LFortran::ASRUtils::intent_in;
+                                        break;
+                                    }
+                                    case (AST::attr_intentType::Out) : {
+                                        s_intent = LFortran::ASRUtils::intent_out;
+                                        break;
+                                    }
+                                    case (AST::attr_intentType::InOut) : {
+                                        s_intent = LFortran::ASRUtils::intent_inout;
+                                        break;
+                                    }
+                                    default : {
+                                        s_intent = LFortran::ASRUtils::intent_unspecified;
+                                        break;
+                                    }
+                                }
+                            } else if (AST::is_a<AST::AttrDimension_t>(*a)) {
+                                AST::AttrDimension_t *ad =
+                                    AST::down_cast<AST::AttrDimension_t>(a);
+                                if (dims.size() > 0) {
+                                    throw SemanticError("Dimensions specified twice",
+                                            x.base.base.loc);
+                                }
+                                dims_attr_loc = ad->base.base.loc;
+                                process_dims(al, dims, ad->m_dim, ad->n_dim, is_compile_time);
                             } else {
                                 throw SemanticError("Attribute type not implemented yet",
                                         x.base.base.loc);
                             }
-                        } else if (AST::is_a<AST::AttrIntent_t>(*a)) {
-                            AST::AttrIntent_t *ai =
-                                AST::down_cast<AST::AttrIntent_t>(a);
-                            switch (ai->m_intent) {
-                                case (AST::attr_intentType::In) : {
-                                    s_intent = LFortran::ASRUtils::intent_in;
-                                    break;
-                                }
-                                case (AST::attr_intentType::Out) : {
-                                    s_intent = LFortran::ASRUtils::intent_out;
-                                    break;
-                                }
-                                case (AST::attr_intentType::InOut) : {
-                                    s_intent = LFortran::ASRUtils::intent_inout;
-                                    break;
-                                }
-                                default : {
-                                    s_intent = LFortran::ASRUtils::intent_unspecified;
-                                    break;
-                                }
-                            }
-                        } else if (AST::is_a<AST::AttrDimension_t>(*a)) {
-                            AST::AttrDimension_t *ad =
-                                AST::down_cast<AST::AttrDimension_t>(a);
-                            if (dims.size() > 0) {
-                                throw SemanticError("Dimensions specified twice",
-                                        x.base.base.loc);
-                            }
-                            dims_attr_loc = ad->base.base.loc;
-                            process_dims(al, dims, ad->m_dim, ad->n_dim, is_compile_time);
-                        } else {
-                            throw SemanticError("Attribute type not implemented yet",
-                                    x.base.base.loc);
                         }
                     }
-                }
-                if (s.n_dim > 0) {
-                    if (dims.size() > 0) {
-                        // This happens for:
-                        // integer, private, dimension(2,2) :: a(2,2)
-                        diag.semantic_warning_label(
-                            "Dimensions are specified twice",
-                            {dims_attr_loc, s.loc}, // dimension(2,2), a(2,2)
-                            "help: consider specifying it just one way or the other"
-                        );
-                        dims.n = 0;
+                    if (s.n_dim > 0) {
+                        if (dims.size() > 0) {
+                            // This happens for:
+                            // integer, private, dimension(2,2) :: a(2,2)
+                            diag.semantic_warning_label(
+                                "Dimensions are specified twice",
+                                {dims_attr_loc, s.loc}, // dimension(2,2), a(2,2)
+                                "help: consider specifying it just one way or the other"
+                            );
+                            dims.n = 0;
+                        }
+                        process_dims(al, dims, s.m_dim, s.n_dim, is_compile_time);
                     }
-                    process_dims(al, dims, s.m_dim, s.n_dim, is_compile_time);
-                }
-                ASR::ttype_t *type = determine_type(x.base.base.loc, sym, x.m_vartype, is_pointer, dims);
+                    ASR::ttype_t *type = determine_type(x.base.base.loc, sym, x.m_vartype, is_pointer, dims);
 
-                ASR::expr_t* init_expr = nullptr;
-                ASR::expr_t* value = nullptr;
-                if (s.m_initializer != nullptr) {
-                    this->visit_expr(*s.m_initializer);
-                    if (is_compile_time && AST::is_a<AST::ArrayInitializer_t>(*s.m_initializer)) {
-                        AST::ArrayInitializer_t *temp_array =
-                            AST::down_cast<AST::ArrayInitializer_t>(s.m_initializer);
-                        // For case  `integer, parameter :: x(*) = [1,2,3], get the compile time length of RHS array.
-                        Vec<ASR::dimension_t> temp_dims;
-                        temp_dims.reserve(al, 1);
-                        ASR::dimension_t temp_dim;
-                        temp_dim.loc = (temp_array->base).base.loc;
-                        ASR::ttype_t *int32_type = ASRUtils::TYPE(ASR::make_Integer_t(al, (temp_array->base).base.loc,
-                                                                                    4, nullptr, 0));
-                        ASR::expr_t* one = ASRUtils::EXPR(ASR::make_IntegerConstant_t(al, (temp_array->base).base.loc, 1, int32_type));
-                        ASR::expr_t* x_n_args = ASRUtils::EXPR(ASR::make_IntegerConstant_t(al, (temp_array->base).base.loc, temp_array->n_args, int32_type));
-                        temp_dim.m_start = one;
-                        temp_dim.m_length = x_n_args;
-                        temp_dims.push_back(al, temp_dim);
-                        type = ASRUtils::duplicate_type(al, type, &temp_dims);
-                    }
-                    init_expr = LFortran::ASRUtils::EXPR(tmp);
-                    ASR::ttype_t *init_type = LFortran::ASRUtils::expr_type(init_expr);
-                    ImplicitCastRules::set_converted_value(al, x.base.base.loc, &init_expr, init_type, type);
-                    LFORTRAN_ASSERT(init_expr != nullptr);
-                    if (storage_type == ASR::storage_typeType::Parameter) {
-                        value = ASRUtils::expr_value(init_expr);
-                        if (value == nullptr) {
-                            throw SemanticError("Value of a parameter variable must evaluate to a compile time constant",
-                                x.base.base.loc);
+                    ASR::expr_t* init_expr = nullptr;
+                    ASR::expr_t* value = nullptr;
+                    if (s.m_initializer != nullptr) {
+                        this->visit_expr(*s.m_initializer);
+                        if (is_compile_time && AST::is_a<AST::ArrayInitializer_t>(*s.m_initializer)) {
+                            AST::ArrayInitializer_t *temp_array =
+                                AST::down_cast<AST::ArrayInitializer_t>(s.m_initializer);
+                            // For case  `integer, parameter :: x(*) = [1,2,3], get the compile time length of RHS array.
+                            Vec<ASR::dimension_t> temp_dims;
+                            temp_dims.reserve(al, 1);
+                            ASR::dimension_t temp_dim;
+                            temp_dim.loc = (temp_array->base).base.loc;
+                            ASR::ttype_t *int32_type = ASRUtils::TYPE(ASR::make_Integer_t(al, (temp_array->base).base.loc,
+                                                                                        4, nullptr, 0));
+                            ASR::expr_t* one = ASRUtils::EXPR(ASR::make_IntegerConstant_t(al, (temp_array->base).base.loc, 1, int32_type));
+                            ASR::expr_t* x_n_args = ASRUtils::EXPR(ASR::make_IntegerConstant_t(al, (temp_array->base).base.loc, temp_array->n_args, int32_type));
+                            temp_dim.m_start = one;
+                            temp_dim.m_length = x_n_args;
+                            temp_dims.push_back(al, temp_dim);
+                            type = ASRUtils::duplicate_type(al, type, &temp_dims);
                         }
-                        if (sym_type->m_type == AST::decl_typeType::TypeCharacter) {
-                            ASR::Character_t *lhs_type = ASR::down_cast<ASR::Character_t>(type);
-                            ASR::Character_t *rhs_type = ASR::down_cast<ASR::Character_t>(ASRUtils::expr_type(value));
-                            int lhs_len = lhs_type->m_len;
-                            int rhs_len = rhs_type->m_len;
-                            if (rhs_len >= 0) {
-                                if (lhs_len == -1) {
-                                    // The RHS len is known at compile time
-                                    // and the LHS is inferred length
-                                    lhs_len = rhs_len;
-                                } else if (lhs_len >= 0) {
-                                    if (lhs_len != rhs_len) {
-                                        // Note: this might be valid, perhaps
-                                        // change this to a warning
-                                        throw SemanticError("The LHS character len="
-                                            + std::to_string(lhs_len)
-                                            + " and the RHS character len="
-                                            + std::to_string(rhs_len)
-                                            + " are not equal.", x.base.base.loc);
+                        init_expr = LFortran::ASRUtils::EXPR(tmp);
+                        ASR::ttype_t *init_type = LFortran::ASRUtils::expr_type(init_expr);
+                        ImplicitCastRules::set_converted_value(al, x.base.base.loc, &init_expr, init_type, type);
+                        LFORTRAN_ASSERT(init_expr != nullptr);
+                        if (storage_type == ASR::storage_typeType::Parameter) {
+                            value = ASRUtils::expr_value(init_expr);
+                            if (value == nullptr) {
+                                throw SemanticError("Value of a parameter variable must evaluate to a compile time constant",
+                                    x.base.base.loc);
+                            }
+                            if (sym_type->m_type == AST::decl_typeType::TypeCharacter) {
+                                ASR::Character_t *lhs_type = ASR::down_cast<ASR::Character_t>(type);
+                                ASR::Character_t *rhs_type = ASR::down_cast<ASR::Character_t>(ASRUtils::expr_type(value));
+                                int lhs_len = lhs_type->m_len;
+                                int rhs_len = rhs_type->m_len;
+                                if (rhs_len >= 0) {
+                                    if (lhs_len == -1) {
+                                        // The RHS len is known at compile time
+                                        // and the LHS is inferred length
+                                        lhs_len = rhs_len;
+                                    } else if (lhs_len >= 0) {
+                                        if (lhs_len != rhs_len) {
+                                            // Note: this might be valid, perhaps
+                                            // change this to a warning
+                                            throw SemanticError("The LHS character len="
+                                                + std::to_string(lhs_len)
+                                                + " and the RHS character len="
+                                                + std::to_string(rhs_len)
+                                                + " are not equal.", x.base.base.loc);
+                                        }
+                                    } else {
+                                        LFORTRAN_ASSERT(lhs_len == -2)
+                                        throw SemanticError("The LHS character len must not be allocatable in a parameter declaration",
+                                            x.base.base.loc);
                                     }
                                 } else {
-                                    LFORTRAN_ASSERT(lhs_len == -2)
-                                    throw SemanticError("The LHS character len must not be allocatable in a parameter declaration",
+                                    throw SemanticError("The RHS character len must be known at compile time",
                                         x.base.base.loc);
                                 }
-                            } else {
-                                throw SemanticError("The RHS character len must be known at compile time",
-                                    x.base.base.loc);
+                                LFORTRAN_ASSERT(lhs_len == rhs_len)
+                                LFORTRAN_ASSERT(lhs_len >= 0)
+                                lhs_type->m_len = lhs_len;
                             }
-                            LFORTRAN_ASSERT(lhs_len == rhs_len)
-                            LFORTRAN_ASSERT(lhs_len >= 0)
-                            lhs_type->m_len = lhs_len;
+                        } else {
+                            storage_type = ASR::storage_typeType::Save; // implicit save
                         }
-                    } else {
-                        storage_type = ASR::storage_typeType::Save; // implicit save
                     }
-                }
-                if( std::find(excluded_from_symtab.begin(), excluded_from_symtab.end(), sym) == excluded_from_symtab.end() ) {
-                    Vec<char*> variable_dependencies_vec;
-                    variable_dependencies_vec.reserve(al, 1);
-                    ASRUtils::collect_variable_dependencies(al, variable_dependencies_vec, type, init_expr, value);
-                    ASR::asr_t *v = ASR::make_Variable_t(al, s.loc, current_scope,
-                            s2c(al, to_lower(s.m_name)), variable_dependencies_vec.p,
-                            variable_dependencies_vec.size(), s_intent, init_expr, value,
-                            storage_type, type, current_procedure_abi_type, s_access, s_presence,
-                            value_attr);
-                    current_scope->add_symbol(sym, ASR::down_cast<ASR::symbol_t>(v));
-                    if( is_derived_type ) {
-                        data_member_names.push_back(al, s2c(al, to_lower(s.m_name)));
+                    if( std::find(excluded_from_symtab.begin(), excluded_from_symtab.end(), sym) == excluded_from_symtab.end() ) {
+                        Vec<char*> variable_dependencies_vec;
+                        variable_dependencies_vec.reserve(al, 1);
+                        ASRUtils::collect_variable_dependencies(al, variable_dependencies_vec, type, init_expr, value);
+                        ASR::asr_t *v = ASR::make_Variable_t(al, s.loc, current_scope,
+                                s2c(al, to_lower(s.m_name)), variable_dependencies_vec.p,
+                                variable_dependencies_vec.size(), s_intent, init_expr, value,
+                                storage_type, type, current_procedure_abi_type, s_access, s_presence,
+                                value_attr);
+                        current_scope->add_symbol(sym, ASR::down_cast<ASR::symbol_t>(v));
+                        if( is_derived_type ) {
+                            data_member_names.push_back(al, s2c(al, to_lower(s.m_name)));
+                        }
                     }
                 }
             } // for m_syms
