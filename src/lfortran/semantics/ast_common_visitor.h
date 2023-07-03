@@ -1063,6 +1063,12 @@ public:
 
             std::string member_name = "1_"+std::string(struct_type->m_name)+"_"+target_var_name;
             ASR::symbol_t* member_sym = scope->resolve_symbol(member_name);
+            if (!struct_type->m_symtab->resolve_symbol(target_var_name)) {
+                SymbolTable* temp_scope = current_scope;
+                current_scope = struct_type->m_symtab;
+                resolve_variable(target_var->base.base.loc, target_var_name);
+                current_scope = temp_scope;
+            }
             if (!member_sym) {
 
                 member_sym = ASR::down_cast<ASR::symbol_t>(make_ExternalSymbol_t(al, target_var->base.base.loc, scope, s2c(al, member_name),
