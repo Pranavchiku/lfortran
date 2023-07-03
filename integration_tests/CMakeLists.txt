@@ -924,6 +924,7 @@ RUN(NAME common_08 LABELS gfortran llvmImplicit)
 RUN(NAME common_09 LABELS gfortran llvm)
 RUN(NAME common_10 LABELS gfortran llvm)
 RUN(NAME common_11 LABELS gfortran llvm)
+RUN(NAME common_12 LABELS gfortran llvm)
 
 
 RUN(NAME statement_01 LABELS gfortran llvmImplicit)
