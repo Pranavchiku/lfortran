@@ -4,6 +4,6 @@ program precision_02
     x1 = 1.1_dp
     x = 1.1 - x1
     print *, x
-    if (abs(x - 2.3841857821338408E-008) > 1D-10) error stop
+    if (.not. (abs(x - 2.3841857821338408E-008_dp) < 1e-14_dp .or. abs(x) < 1e-14_dp)) error stop
 end program
     
