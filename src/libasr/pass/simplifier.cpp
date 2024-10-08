@@ -546,6 +546,26 @@ bool set_allocation_size(
             }
             break;
         }
+        case ASR::exprType::Var: {
+            size_t rank = ASRUtils::extract_n_dims_from_ttype(
+                ASRUtils::expr_type(value));
+            ASR::expr_t* selected_array = value;
+            allocate_dims.reserve(al, rank);
+            for( size_t i = 0; i < rank; i++ ) {
+                ASR::dimension_t allocate_dim;
+                allocate_dim.loc = loc;
+                // Assume 1 for Fortran.
+                allocate_dim.m_start = ASRUtils::EXPR(ASR::make_IntegerConstant_t(
+                    al, loc, 1, ASRUtils::TYPE(ASR::make_Integer_t(al, loc, 4))));
+                ASR::expr_t* dim = ASRUtils::EXPR(ASR::make_IntegerConstant_t(
+                    al, loc, i + 1, ASRUtils::TYPE(ASR::make_Integer_t(al, loc, 4))));
+                allocate_dim.m_length = ASRUtils::EXPR(ASR::make_ArraySize_t(
+                    al, loc, selected_array, dim, ASRUtils::TYPE(
+                        ASR::make_Integer_t(al, loc, 4)), nullptr));
+                allocate_dims.push_back(al, allocate_dim);
+            }
+            break;
+        }
         case ASR::exprType::ArraySection: {
             ASR::ArraySection_t* array_section_t = ASR::down_cast<ASR::ArraySection_t>(value);
             allocate_dims.reserve(al, array_section_t->n_args);
@@ -1340,6 +1360,7 @@ class ArgSimplifier: public ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>
             xx.m_type = ASRUtils::duplicate_type(al, x.m_type, &dims,
                 ASR::array_physical_typeType::DescriptorArray, true);
         }
+        ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>::visit_IntrinsicArrayFunction(x);
     }
 
     template <typename T>
@@ -1377,6 +1398,42 @@ class ArgSimplifier: public ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>
         xx.m_##member = create_and_allocate_temporary_variable_for_array( \
             x.m_##member, name_hint, al, current_body, current_scope, exprs_with_target); \
         END_VAR_CHECK
+
+    #define replace_expr_with_temporary_variable2(expr, name_hint) BEGIN_VAR_CHECK(expr) \
+        visit_expr(*expr); \
+        expr = create_and_allocate_temporary_variable_for_array( \
+            expr, name_hint, al, current_body, current_scope, exprs_with_target); \
+        END_VAR_CHECK
+
+    void visit_ArrayPhysicalCast(const ASR::ArrayPhysicalCast_t& x) {
+        ASR::ArrayPhysicalCast_t& xx = const_cast<ASR::ArrayPhysicalCast_t&>(x);
+        replace_expr_with_temporary_variable(arg, "_array_physical_cast_array_")
+        ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>::visit_ArrayPhysicalCast(x);
+    }
+
+    void visit_Array(const ASR::Array_t& x) {
+        // iterate over dims, case: a = x(y(b))
+        // where return type of y: integer :: x(minval(shape(b)))
+        // thus we need to create temporary for `shape(b)`
+        ASR::Array_t& xx = const_cast<ASR::Array_t&>(x);
+        for (size_t i = 0; i < x.n_dims; i++) {
+            if ( x.m_dims[i].m_start ) {
+                replace_expr_with_temporary_variable2(xx.m_dims[i].m_start, "_array_dim_start_")
+                visit_expr(*xx.m_dims[i].m_start);
+            }
+            if ( x.m_dims[i].m_length ) {
+                replace_expr_with_temporary_variable2(xx.m_dims[i].m_length, "_array_dim_length_")
+                visit_expr(*xx.m_dims[i].m_length);
+            }
+        }
+        ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>::visit_Array(x);
+    }
+
+    void visit_ArraySize(const ASR::ArraySize_t& x) {
+        ASR::ArraySize_t& xx = const_cast<ASR::ArraySize_t&>(x);
+        replace_expr_with_temporary_variable(v, "_array_size_array_")
+        ASR::CallReplacerOnExpressionsVisitor<ArgSimplifier>::visit_ArraySize(x);
+    }
 
     void visit_ArrayReshape(const ASR::ArrayReshape_t& x) {
         ASR::ArrayReshape_t& xx = const_cast<ASR::ArrayReshape_t&>(x);
@@ -1525,6 +1582,7 @@ class ReplaceExprWithTemporary: public ASR::BaseExprReplacer<ReplaceExprWithTemp
         } else {
             replace_current_expr(name_hint)
         }
+        ASR::BaseExprReplacer<ReplaceExprWithTemporary>::replace_IntrinsicArrayFunction(x);
     }
 
     void replace_IntrinsicImpureFunction(ASR::IntrinsicImpureFunction_t* x) {

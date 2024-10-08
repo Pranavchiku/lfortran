@@ -7,6 +7,7 @@
 #include <libasr/pass/intrinsic_function_registry.h>
 #include <libasr/pass/intrinsic_array_function_registry.h>
 #include <libasr/pass/pass_utils.h>
+#include <libasr/pickle.h>
 
 #include <vector>
 #include <utility>
@@ -164,6 +165,7 @@ class ReplaceFunctionCallReturningArray: public ASR::BaseExprReplacer<ReplaceFun
 
     void replace_FunctionCall(ASR::FunctionCall_t* x) {
         ASR::symbol_t* x_m_name = ASRUtils::symbol_get_past_external(x->m_name);
+        std::cout<<"x_m_name: "<<ASRUtils::symbol_name(x_m_name)<<std::endl;
         if( func2intrinsicid.find(x_m_name) == func2intrinsicid.end() ) {
             return ;
         }
@@ -214,6 +216,7 @@ class ReplaceFunctionCallReturningArrayVisitor : public ASR::CallReplacerOnExpre
         }
 
         void transform_stmts(ASR::stmt_t **&m_body, size_t &n_body) {
+            std::cout<<"transform stmts begin"<<std::endl;
             Vec<ASR::stmt_t*> body;
             body.reserve(al, n_body);
             if( parent_body ) {
@@ -240,12 +243,61 @@ class ReplaceFunctionCallReturningArrayVisitor : public ASR::CallReplacerOnExpre
             m_body = body.p;
             n_body = body.size();
             pass_result.n = 0;
+            std::cout<<"transform stmts ends"<<std::endl;
+        }
+
+        void visit_FunctionCall(const ASR::FunctionCall_t &x) {
+            std::cout<<"visit_FunctionCall: "<<ASRUtils::symbol_name(x.m_name)<<std::endl;
+            for (size_t i=0; i<x.n_args; i++) {
+                if ( ASR::is_a<ASR::ArrayPhysicalCast_t>(*x.m_args[i].m_value) ) {
+                    std::cout<<"ArrayPhysical cast"<<std::endl;
+                    ASR::ArrayPhysicalCast_t* apc = ASR::down_cast<ASR::ArrayPhysicalCast_t>(x.m_args[i].m_value);
+                    if ( ASR::is_a<ASR::Var_t>(*apc->m_arg) ) {
+                        std::cout<<"Var hai: "<<ASRUtils::symbol_name(ASR::down_cast<ASR::Var_t>(apc->m_arg)->m_v)<<std::endl;
+                    } else if ( ASR::is_a<ASR::FunctionCall_t>(*apc->m_arg)) {
+                        std::cout<<"functionc all to "<<ASRUtils::symbol_name(ASR::down_cast<ASR::FunctionCall_t>(apc->m_arg)->m_name)<<std::endl;
+                    } else {
+                        std::cout<<"not var or function call "<<std::endl;
+                    }
+                } else {
+                    std::cout<<"not ArrayPhysical cast"<<std::endl;
+                }
+                visit_call_arg(x.m_args[i]);
+            }
+            visit_ttype(*x.m_type);
+            if (x.m_value) {
+                if (call_replacer_on_value) {
+                    ASR::expr_t** current_expr_copy_121 = current_expr;
+                    current_expr = const_cast<ASR::expr_t**>(&(x.m_value));
+                    call_replacer();
+                    current_expr = current_expr_copy_121;
+                }
+                if( x.m_value )
+                visit_expr(*x.m_value);
+            }
+            if (x.m_dt) {
+                ASR::expr_t** current_expr_copy_122 = current_expr;
+                current_expr = const_cast<ASR::expr_t**>(&(x.m_dt));
+                call_replacer();
+                current_expr = current_expr_copy_122;
+                if( x.m_dt )
+                visit_expr(*x.m_dt);
+            }
+            std::cout<<"done visit_FunctionCall to "<<ASRUtils::symbol_name(x.m_name)<<std::endl;
         }
 
         void visit_Assignment(const ASR::Assignment_t& x) {
+            std::cout<<"visit_Assignment"<<std::endl;
             replacer.result_var_ = x.m_target;
+            if ( ASR::is_a<ASR::Var_t>(*x.m_target) ) {
+                ASR::Var_t* var = ASR::down_cast<ASR::Var_t>(x.m_target);
+                std::cout<<"var->m_name: "<<ASRUtils::symbol_name(var->m_v)<<std::endl;
+            } else {
+                std::cout<<"var nahi hai"<<std::endl;
+            }
             ASR::CallReplacerOnExpressionsVisitor<ReplaceFunctionCallReturningArrayVisitor>::visit_Assignment(x);
             replacer.result_var_ = nullptr;
+            std::cout<<"visit_Assignment done"<<std::endl;
         }
 
 };
@@ -255,6 +307,7 @@ void pass_replace_intrinsic_function(Allocator &al, ASR::TranslationUnit_t &unit
     std::map<ASR::symbol_t*, ASRUtils::IntrinsicArrayFunctions> func2intrinsicid;
     ReplaceIntrinsicFunctionsVisitor v(al, unit.m_symtab, func2intrinsicid);
     v.visit_TranslationUnit(unit);
+    std::cout << LCompilers::pickle(unit, true, true, false) << std::endl;
     ReplaceFunctionCallReturningArrayVisitor u(al, func2intrinsicid);
     u.visit_TranslationUnit(unit);
     PassUtils::UpdateDependenciesVisitor w(al);
