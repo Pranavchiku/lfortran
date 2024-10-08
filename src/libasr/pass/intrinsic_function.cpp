@@ -166,7 +166,10 @@ class ReplaceFunctionCallReturningArray: public ASR::BaseExprReplacer<ReplaceFun
     void replace_FunctionCall(ASR::FunctionCall_t* x) {
         ASR::symbol_t* x_m_name = ASRUtils::symbol_get_past_external(x->m_name);
         std::cout<<"x_m_name: "<<ASRUtils::symbol_name(x_m_name)<<std::endl;
-        if( func2intrinsicid.find(x_m_name) == func2intrinsicid.end() ) {
+        int n_dims = ASRUtils::extract_n_dims_from_ttype(x->m_type);
+        if( func2intrinsicid.find(x_m_name) == func2intrinsicid.end() || n_dims == 0 ||
+                !ASRUtils::IntrinsicArrayFunctionRegistry::handle_dim(func2intrinsicid[x_m_name])) {
+            std::cout<<"return"<<std::endl;
             return ;
         }
 
