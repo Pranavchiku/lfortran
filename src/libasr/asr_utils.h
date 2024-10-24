@@ -52,6 +52,8 @@ namespace LCompilers  {
 
     namespace ASRUtils  {
 
+static bool pass_simplifier_intrinsic;
+
 ASR::symbol_t* import_class_procedure(Allocator &al, const Location& loc,
         ASR::symbol_t* original_sym, SymbolTable *current_scope);
 
